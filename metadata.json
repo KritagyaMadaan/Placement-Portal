@@ -1,0 +1,5 @@
+{
+  "name": "NFSU Placement Portal",
+  "description": "A comprehensive placement management system for National Forensic Sciences University, featuring centralized student databases, automated eligibility checking, company registration, and AI-powered notification drafting.",
+  "requestFramePermissions": []
+}

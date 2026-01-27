@@ -1,0 +1,150 @@
+// NOTICES & EVENTS TAB CONTENT - INSERT THIS AFTER LINE 634 in AdminDashboard.tsx
+
+            {/* Notices & Events Tab */}
+            {activeTab === 'notices' && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="grid md:grid-cols-2 gap-8">
+                        {/* Notices Section */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <div className="flex justify-between items-center mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600">
+                                        <Bell size={20} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-900">Notices</h3>
+                                        <p className="text-xs text-slate-500">Manage placement notices</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setEditingNotice(null);
+                                        setIsNoticeModalOpen(true);
+                                    }}
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition"
+                                >
+                                    <Plus size={16} /> Add Notice
+                                </button>
+                            </div>
+
+                            <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                                {notices.length === 0 ? (
+                                    <p className="text-center text-slate-400 py-8 italic">No notices posted yet</p>
+                                ) : (
+                                    notices.map(notice => (
+                                        <div key={notice.id} className="border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="font-bold text-slate-900 text-sm">{notice.title}</h4>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${notice.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                        {notice.isActive ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditingNotice(notice);
+                                                            setIsNoticeModalOpen(true);
+                                                        }}
+                                                        className="p-1.5 hover:bg-slate-100 rounded transition"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit size={14} className="text-slate-600" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (confirm('Delete this notice?')) {
+                                                                StorageService.deleteNotice(notice.id);
+                                                                setNotices(StorageService.getNotices());
+                                                            }
+                                                        }}
+                                                        className="p-1.5 hover:bg-red-50 rounded transition"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={14} className="text-red-600" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-slate-600 mb-2">{notice.description}</p>
+                                            <p className="text-[10px] text-slate-400">Posted: {new Date(notice.postedAt).toLocaleDateString()}</p>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Events Section */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <div className="flex justify-between items-center mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+                                        <Calendar size={20} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-900">Events</h3>
+                                        <p className="text-xs text-slate-500">Manage upcoming events</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setEditingEvent(null);
+                                        setIsEventModalOpen(true);
+                                    }}
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition"
+                                >
+                                    <Plus size={16} /> Add Event
+                                </button>
+                            </div>
+
+                            <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                                {events.length === 0 ? (
+                                    <p className="text-center text-slate-400 py-8 italic">No events scheduled yet</p>
+                                ) : (
+                                    events.map(event => (
+                                        <div key={event.id} className="border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition">
+                                            <div className="flex gap-3">
+                                                <div className="bg-slate-50 rounded-lg p-2 min-w-[50px] text-center border border-slate-100">
+                                                    <span className="block text-[10px] font-bold text-slate-400 uppercase">{event.month}</span>
+                                                    <span className="block text-lg font-bold text-slate-900">{event.day}</span>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-start mb-1">
+                                                        <h4 className="font-bold text-slate-900 text-sm">{event.title}</h4>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                                {event.isActive ? 'Active' : 'Inactive'}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingEvent(event);
+                                                                    setIsEventModalOpen(true);
+                                                                }}
+                                                                className="p-1.5 hover:bg-slate-100 rounded transition"
+                                                                title="Edit"
+                                                            >
+                                                                <Edit size={14} className="text-slate-600" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (confirm('Delete this event?')) {
+                                                                        StorageService.deleteEvent(event.id);
+                                                                        setEvents(StorageService.getEvents());
+                                                                    }
+                                                                }}
+                                                                className="p-1.5 hover:bg-red-50 rounded transition"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 size={14} className="text-red-600" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-xs text-slate-600 mb-1">{event.description}</p>
+                                                    <p className="text-[10px] text-slate-400">Date: {new Date(event.date).toLocaleDateString()}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
