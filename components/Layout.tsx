@@ -40,7 +40,7 @@ export const Layout: React.FC = () => {
           <div className="container mx-auto px-6 h-20 flex items-center justify-between">
 
             {/* LEFT SIDE: Branding + Actions */}
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-3 md:gap-8">
               <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
                 <img src={logoUrl} alt="NFSU Logo" className="w-10 h-10 object-contain transition-transform group-hover:scale-105" />
                 <div className="hidden lg:flex flex-col">
@@ -64,13 +64,13 @@ export const Layout: React.FC = () => {
                   <>
                     <button
                       onClick={() => navigate('/login')}
-                      className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition shadow-sm hover:shadow-md active:scale-95"
+                      className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-full bg-slate-900 text-white font-semibold text-[10px] md:text-sm hover:bg-slate-800 transition shadow-sm hover:shadow-md active:scale-95"
                     >
                       Student Login
                     </button>
                     <button
                       onClick={() => navigate('/signup')}
-                      className="hidden md:flex items-center gap-2 px-6 py-2.5 rounded-full border border-slate-200 text-slate-600 font-semibold text-sm hover:border-slate-400 hover:text-slate-900 transition active:scale-95"
+                      className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-full border border-slate-200 text-slate-600 font-semibold text-[10px] md:text-sm hover:border-slate-400 hover:text-slate-900 transition active:scale-95"
                     >
                       Register
                     </button>
@@ -80,10 +80,10 @@ export const Layout: React.FC = () => {
             </div>
 
             {/* RIGHT SIDE: Master Login & Recruiter Dropdown */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 md:gap-6">
               <button
                 onClick={() => navigate('/admin-login')}
-                className="hidden md:flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-slate-900 uppercase tracking-wider transition"
+                className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-gray-400 hover:text-slate-900 uppercase tracking-wider transition"
               >
                 <ShieldCheck size={14} /> Master
               </button>
@@ -92,7 +92,7 @@ export const Layout: React.FC = () => {
                 <button
                   onClick={() => setIsRecruiterMenuOpen(!isRecruiterMenuOpen)}
                   onBlur={() => setTimeout(() => setIsRecruiterMenuOpen(false), 200)}
-                  className="flex items-center gap-1.5 text-slate-600 font-semibold text-sm hover:text-rose-600 transition px-3 py-2 rounded-lg hover:bg-rose-50"
+                  className="flex items-center gap-1.5 text-slate-600 font-semibold text-[10px] md:text-sm hover:text-rose-600 transition px-2 md:px-3 py-2 rounded-lg hover:bg-rose-50"
                 >
                   For Recruiters <ChevronDown size={16} className={`transition-transform duration-200 ${isRecruiterMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
