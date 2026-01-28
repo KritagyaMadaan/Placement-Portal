@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { StorageService } from '../services/storageService';
 import { Student } from '../types';
-import { User, BookOpen, FileText, Upload, Check, AlertCircle, ArrowLeft, Mail, AlertOctagon, Download, Eye, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Link2, User, BookOpen, FileText, Upload, Check, AlertCircle, ArrowLeft, Mail, AlertOctagon, Download, Eye, LogOut } from 'lucide-react';
 
 export const StudentProfile: React.FC = () => {
     const navigate = useNavigate();
@@ -20,12 +20,28 @@ export const StudentProfile: React.FC = () => {
     const [backlogs, setBacklogs] = useState(0);
     const [skills, setSkills] = useState('');
     const [certifications, setCertifications] = useState('');
-    const [resumeFile, setResumeFile] = useState<File | null>(null);
+    const [resumeLink, setResumeLink] = useState('');
 
     // UI States
     const [isSaving, setIsSaving] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
+
+    const getDrivePreviewUrl = (url: string) => {
+        if (!url) return '';
+        try {
+            // Convert standard drive links to preview links
+            if (url.includes('drive.google.com')) {
+                const match = url.match(/\/d\/([^/]+)/);
+                if (match && match[1]) {
+                    return `https://drive.google.com/file/d/${match[1]}/preview`;
+                }
+            }
+            return url;
+        } catch (e) {
+            return url;
+        }
+    };
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -49,6 +65,7 @@ export const StudentProfile: React.FC = () => {
                 setBacklogs(currentStudent.backlogs || 0);
                 setSkills(currentStudent.skills?.join(', ') || '');
                 setCertifications(currentStudent.certifications?.join(', ') || '');
+                setResumeLink(currentStudent.resumeUrl || '');
                 setLoading(false);
                 setDataError(false);
             } else {
@@ -62,21 +79,6 @@ export const StudentProfile: React.FC = () => {
         fetchProfile();
     }, [navigate]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            if (file.size > 2 * 1024 * 1024) {
-                setErrorMsg("File too large. Max 2MB.");
-                return;
-            }
-            if (file.type !== 'application/pdf') {
-                setErrorMsg("Only PDF files are allowed.");
-                return;
-            }
-            setResumeFile(file);
-            setErrorMsg('');
-        }
-    };
 
     const handleSave = async () => {
         if (!student) return;
@@ -96,18 +98,14 @@ export const StudentProfile: React.FC = () => {
                 backlogs,
                 skills: skills.split(',').map(s => s.trim()).filter(Boolean),
                 certifications: certifications.split(',').map(s => s.trim()).filter(Boolean),
+                resumeUrl: resumeLink || undefined,
+                resumeFileName: resumeLink ? 'Google Drive Resume' : undefined,
+                resumeUploadedAt: resumeLink ? new Date().toISOString() : undefined,
                 lastUpdated: new Date().toISOString()
             };
 
-            if (resumeFile) {
-                updatedStudent.resumeUrl = 'uploaded';
-                updatedStudent.resumeFileName = resumeFile.name;
-                updatedStudent.resumeUploadedAt = new Date().toISOString();
-            }
-
             await StorageService.saveStudent(updatedStudent);
             setStudent(updatedStudent);
-            setResumeFile(null);
             setSuccessMsg('Profile updated successfully!');
             setTimeout(() => setSuccessMsg(''), 3000);
         } catch (error) {
@@ -285,43 +283,50 @@ export const StudentProfile: React.FC = () => {
                                 <FileText size={18} /> Professional Resume
                             </h3>
 
-                            <div className="relative z-10">
-                                {student.resumeUrl ? (
-                                    <div className="mb-8 p-6 bg-gradient-to-br from-green-900/30 to-green-800/20 rounded-2xl border border-green-500/20">
+                            <div className="space-y-4">
+                                {student.resumeUrl && (
+                                    <div className="mb-8 p-6 bg-gradient-to-br from-rose-900/30 to-rose-800/20 rounded-2xl border border-rose-500/20">
                                         <div className="flex items-center gap-3 mb-3">
-                                            <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                                                <FileText size={20} className="text-green-400" />
+                                            <div className="w-10 h-10 bg-rose-500/20 rounded-full flex items-center justify-center">
+                                                <Link2 size={20} className="text-rose-400" />
                                             </div>
                                             <div className="flex-1">
-                                                <p className="text-xs font-bold text-green-400 uppercase tracking-wider">Resume Uploaded</p>
-                                                <p className="text-sm font-bold text-white mt-0.5">{student.resumeFileName || 'resume.pdf'}</p>
+                                                <p className="text-xs font-bold text-rose-400 uppercase tracking-wider">Current Resume Link</p>
+                                                <p className="text-sm font-bold text-white mt-0.5 line-clamp-1">{student.resumeUrl}</p>
                                             </div>
                                         </div>
-                                        <div className="text-[10px] text-slate-400 font-medium">
-                                            Uploaded on {student.resumeUploadedAt || 'N/A'}
+                                        <button
+                                            onClick={() => window.open(student.resumeUrl, '_blank')}
+                                            className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold py-3 rounded-xl border border-white/10 flex items-center justify-center gap-2 transition uppercase"
+                                        >
+                                            <Eye size={14} /> Open in New Tab
+                                        </button>
+
+                                        <div className="mt-6 rounded-xl overflow-hidden border border-white/10 bg-black/20 h-[300px]">
+                                            <iframe
+                                                src={getDrivePreviewUrl(student.resumeUrl)}
+                                                className="w-full h-full border-none"
+                                                title="Resume Preview"
+                                            />
                                         </div>
-                                        <div className="mt-3 text-xs text-slate-400 italic">
-                                            Note: File stored securely. Download feature available in production.
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="mb-8 p-6 bg-white/5 rounded-2xl border border-white/10 text-center text-slate-400">
-                                        No resume attached to profile yet.
                                     </div>
                                 )}
 
-                                <div className="relative border-2 border-dashed border-white/20 rounded-2xl p-8 text-center hover:bg-white/5 transition cursor-pointer group">
-                                    <input type="file" accept=".pdf" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Upload size={24} className="text-slate-400 group-hover:text-white transition group-hover:scale-110 duration-300" />
-                                        <span className="font-bold text-sm text-slate-300">Click to {student.resumeUrl ? 'Update' : 'Upload'} PDF</span>
-                                        <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Max size 2MB</span>
-                                    </div>
-                                    {resumeFile && (
-                                        <div className="mt-4 text-xs font-bold text-green-400 bg-green-400/10 py-1 px-3 rounded-full inline-block">
-                                            Selected: {resumeFile.name}
+                                <div className="space-y-4">
+                                    <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">Update Resume Link</label>
+                                    <div className="relative">
+                                        <div className="absolute left-4 top-4 text-slate-500">
+                                            <Link2 size={20} />
                                         </div>
-                                    )}
+                                        <input
+                                            type="url"
+                                            placeholder="Paste new Google Drive link..."
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-12 text-white text-sm focus:ring-2 focus:ring-rose-500 outline-none transition"
+                                            value={resumeLink}
+                                            onChange={e => setResumeLink(e.target.value)}
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 italic">Ensure the link visibility is set to "Anyone with the link can view".</p>
                                 </div>
                             </div>
 
