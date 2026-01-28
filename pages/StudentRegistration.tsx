@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { StorageService } from '../services/storageService';
 import { AuthService } from '../services/authService';
 import { DbService } from '../services/dbService';
 import { Student } from '../types';
 import { BRANCHES } from '../constants';
-import { UserPlus, ArrowLeft, Upload, FileText, AlertCircle } from 'lucide-react';
 import { ListmonkService } from '../services/listmonkService';
+import { Link2, UserPlus, ArrowLeft, Upload, FileText, AlertCircle } from 'lucide-react';
 
 export const StudentRegistration: React.FC = () => {
     const navigate = useNavigate();
@@ -26,30 +25,10 @@ export const StudentRegistration: React.FC = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [skillsInput, setSkillsInput] = useState('');
     const [certsInput, setCertsInput] = useState('');
-    const [resumeFile, setResumeFile] = useState<File | null>(null);
+    const [resumeLink, setResumeLink] = useState('');
     const [error, setError] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            if (file.size > 2 * 1024 * 1024) { // 2MB Limit for LocalStorage safety
-                setError("File size too large. Max 2MB allowed for local storage.");
-                return;
-            }
-            setResumeFile(file);
-            setError('');
-        }
-    };
-
-    const convertToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = error => reject(error);
-        });
-    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,6 +37,12 @@ export const StudentRegistration: React.FC = () => {
 
         if (formData.password !== confirmPassword) {
             setError('Passwords do not match.');
+            setIsProcessing(false);
+            return;
+        }
+
+        if (!formData.email?.toLowerCase().endsWith('@nfsu.ac.in')) {
+            setError('Student registration is only allowed with official @nfsu.ac.in email address.');
             setIsProcessing(false);
             return;
         }
@@ -73,17 +58,17 @@ export const StudentRegistration: React.FC = () => {
                 id: fbUser.uid, // Use Firebase UID as the document ID
                 skills: skillsInput.split(',').map(s => s.trim()).filter(s => s),
                 certifications: certsInput.split(',').map(s => s.trim()).filter(s => s),
-                resumeUrl: resumeFile ? 'uploaded' : undefined,
-                resumeFileName: resumeFile ? resumeFile.name : undefined,
-                resumeUploadedAt: resumeFile ? new Date().toLocaleDateString() : undefined,
+                resumeUrl: resumeLink || undefined,
+                resumeFileName: resumeLink ? 'Google Drive Resume' : undefined,
+                resumeUploadedAt: resumeLink ? new Date().toISOString() : undefined,
                 isVerified: false,
                 isBlacklisted: false
             };
 
-            // 3. Save to Firestore
+            // 4. Save to Firestore
             await DbService.saveStudent(newStudent);
 
-            // 4. Send welcome email via Listmonk
+            // 5. Send welcome email via Listmonk
             await ListmonkService.sendStudentWelcomeEmail(newStudent);
 
             alert('Registration Successful! A welcome email has been sent to your registered address.');
@@ -203,24 +188,20 @@ export const StudentRegistration: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Upload Resume (PDF)</label>
-                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:bg-gray-50 transition cursor-pointer relative group bg-gray-50">
-                                    <input
-                                        type="file"
-                                        accept=".pdf"
-                                        onChange={handleFileChange}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    />
-                                    <div className="flex flex-col items-center gap-2 text-gray-500 group-hover:text-gray-700 transition">
-                                        <div className="w-10 h-10 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mb-1 group-hover:scale-110 transition">
-                                            <Upload size={20} />
-                                        </div>
-                                        <span className="font-medium text-gray-900 text-sm">
-                                            {resumeFile ? resumeFile.name : "Click to upload resume"}
-                                        </span>
-                                        <span className="text-xs">PDF only (Max 2MB)</span>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Resume link (Google Drive)</label>
+                                <div className="relative">
+                                    <div className="absolute left-3 top-2.5 text-gray-400">
+                                        <Link2 size={18} />
                                     </div>
+                                    <input
+                                        type="url"
+                                        placeholder="https://drive.google.com/..."
+                                        className="w-full border-gray-200 border p-2.5 pl-10 rounded focus:ring-2 focus:ring-rose-500 outline-none bg-gray-50"
+                                        value={resumeLink}
+                                        onChange={e => setResumeLink(e.target.value)}
+                                    />
                                 </div>
+                                <p className="text-[10px] text-gray-500 mt-1 italic">Make sure the link is set to "Anyone with the link can view"</p>
                             </div>
                         </div>
                     </div>
