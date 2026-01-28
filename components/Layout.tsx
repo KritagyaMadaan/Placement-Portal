@@ -149,7 +149,6 @@ export const Layout: React.FC = () => {
         <nav className="flex-1 p-4 space-y-2">
           {user?.role === Role.ADMIN && (
             <>
-              <NavItem to="/admin" icon={<LayoutDashboard size={18} />} label="Overview" active={location.pathname === '/admin'} />
               <NavItem to="/admin/students" icon={<User size={18} />} label="Student Database" active={location.pathname === '/admin/students'} />
               <NavItem to="/admin/drives" icon={<Briefcase size={18} />} label="Placement Drives" active={location.pathname === '/admin/drives'} />
               <NavItem to="/admin/mail-bot" icon={<Mail size={18} />} label="Mail Bot (AI)" active={location.pathname === '/admin/mail-bot'} />
