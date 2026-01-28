@@ -26,7 +26,7 @@ export const AdminLogin: React.FC = () => {
         role: Role.ADMIN
       };
       sessionStorage.setItem('nfsu_user_session', JSON.stringify(adminUser));
-      navigate('/admin');
+      navigate('/admin/students');
     } catch (err: any) {
       setError('Access Denied: Incorrect Master Key or Connection Error');
     }
