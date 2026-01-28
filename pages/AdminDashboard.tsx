@@ -79,6 +79,14 @@ export const AdminDashboard: React.FC = () => {
         setNotices(n);
         setEvents(e);
 
+        console.log('Fetched Admin Data:', {
+            students: s.length,
+            companies: c.length,
+            pendingCompanies: c.filter(item => !item.isApproved).length,
+            applications: a.length,
+            drives: d.length
+        });
+
         // Build maps
         const sMap: Record<string, Student> = {};
         s.forEach(item => sMap[item.id] = item);
@@ -217,6 +225,12 @@ export const AdminDashboard: React.FC = () => {
 
     const handleAddStudent = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!newStudent.email?.toLowerCase().endsWith('@nfsu.ac.in')) {
+            alert('Error: Student email must be of domain @nfsu.ac.in');
+            return;
+        }
+
         const student: Student = {
             ...newStudent as Student,
             id: `s${Date.now()}`,
@@ -257,6 +271,8 @@ export const AdminDashboard: React.FC = () => {
             if (!line.trim()) return;
             const [name, email, rollNo, cgpa, branch] = line.split(',');
             if (name && email && rollNo) {
+                if (!email.trim().toLowerCase().endsWith('@nfsu.ac.in')) return;
+
                 const password = passwords[idx] || PasswordGenerator.generate();
                 imported.push({
                     id: `s_imp_${Date.now()}_${idx}`,
@@ -296,17 +312,17 @@ export const AdminDashboard: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-extrabold tracking-tight">Admin Console</h1>
-                    <p className="text-slate-500 font-medium">System Overview & Management</p>
+                    <p className="text-slate-500 font-medium">Placement Management System</p>
                 </div>
 
                 <div className="flex bg-slate-100 p-1 rounded-xl overflow-x-auto">
                     {[
                         { id: 'students', label: 'Students' },
-                        { id: 'companies', label: 'Companies' },
+                        { id: 'companies', label: 'Companies', count: pendingCompanies.length },
+                        { id: 'approvals', label: 'Approvals', count: pendingCompanies.length },
                         { id: 'applications', label: 'Applications', count: applications.length },
                         { id: 'notices', label: 'Notices & Events' },
                         { id: 'verification', label: 'Verifications', count: pendingStudents.length },
-                        { id: 'approvals', label: 'Approvals', count: pendingCompanies.length }
                     ].map(tab => (
                         <button
                             key={tab.id}
@@ -327,36 +343,6 @@ export const AdminDashboard: React.FC = () => {
 
             {activeTab === 'students' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
-                    {/* Analytics */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 min-w-0">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">Students by Branch</h3>
-                            <div className="h-60 w-full">
-                                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                                    <BarChart data={chartData}>
-                                        <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
-                                        <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                                        <Bar dataKey="value" fill="#334155" radius={[4, 4, 4, 4]} barSize={40} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 min-w-0">
-                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-6">Application Status</h3>
-                            <div className="h-60 w-full">
-                                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                                    <PieChart>
-                                        <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                                            {pieData.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>
-                    </div>
 
                     {/* Database Table */}
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -486,7 +472,7 @@ export const AdminDashboard: React.FC = () => {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                navigator.clipboard.writeText(student.password);
+                                                                navigator.clipboard.writeText(student.password || '');
                                                                 alert('Password copied to clipboard!');
                                                             }}
                                                             className="p-1.5 hover:bg-slate-100 rounded transition text-slate-400 hover:text-slate-700"
@@ -629,16 +615,30 @@ export const AdminDashboard: React.FC = () => {
                                                         )}
                                                     </td>
                                                     <td className="p-5 text-right">
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setSelectedCompany(company);
-                                                            }}
-                                                            className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
-                                                            title="View Details"
-                                                        >
-                                                            <Eye size={16} />
-                                                        </button>
+                                                        <div className="flex justify-end gap-2">
+                                                            {!company.isApproved && (
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        approveCompany(company.id);
+                                                                    }}
+                                                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition shadow-sm"
+                                                                    title="Approve Company"
+                                                                >
+                                                                    <Check size={14} /> Approve
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSelectedCompany(company);
+                                                                }}
+                                                                className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                                                                title="View Details"
+                                                            >
+                                                                <Eye size={16} />
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             );
